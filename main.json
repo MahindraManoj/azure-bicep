@@ -1,0 +1,1003 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.1318.3566",
+      "templateHash": "14364735707629668624"
+    }
+  },
+  "parameters": {
+    "resourceLocation": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "resourceGroupBlock": {
+      "type": "object"
+    },
+    "virtualNetworkName": {
+      "type": "string"
+    },
+    "virtualNetworkAddressPrefix": {
+      "type": "string"
+    },
+    "subnetBlock": {
+      "type": "object"
+    },
+    "vmAvailabilitySetName": {
+      "type": "string"
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_B2ms"
+    },
+    "vmValues": {
+      "type": "object"
+    },
+    "vmAdminUsername": {
+      "type": "string",
+      "defaultValue": "vmlocadmin"
+    },
+    "vmAdminPassword": {
+      "type": "secureString"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "resourceGroup",
+      "subscriptionId": "[subscription().subscriptionId]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "resourceGroupBlock": {
+            "value": "[parameters('resourceGroupBlock')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1318.3566",
+              "templateHash": "11506599026248863061"
+            }
+          },
+          "parameters": {
+            "resourceGroupBlock": {
+              "type": "object",
+              "defaultValue": {
+                "name": "myRG",
+                "location": "canadacentral",
+                "tags": {}
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/resourceGroups",
+              "apiVersion": "2021-04-01",
+              "name": "[parameters('resourceGroupBlock').name]",
+              "location": "[parameters('resourceGroupBlock').location]",
+              "tags": "[if(not(empty(parameters('resourceGroupBlock').tags)), parameters('resourceGroupBlock').tags, json('null'))]",
+              "properties": {}
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "virtualNetwork",
+      "resourceGroup": "[parameters('resourceGroupBlock').name]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "resourceLocation": {
+            "value": "[parameters('resourceLocation')]"
+          },
+          "virtualNetworkName": {
+            "value": "[parameters('virtualNetworkName')]"
+          },
+          "vnetAddressSpace": {
+            "value": "[parameters('virtualNetworkAddressPrefix')]"
+          },
+          "subnetBlock": {
+            "value": "[parameters('subnetBlock')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1318.3566",
+              "templateHash": "18387476862381248306"
+            }
+          },
+          "parameters": {
+            "virtualNetworkName": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of the virtual network to be created"
+              }
+            },
+            "vnetAddressSpace": {
+              "type": "string",
+              "metadata": {
+                "description": "Address space that vnet will have"
+              }
+            },
+            "resourceLocation": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Location of the resource(s) deployed"
+              }
+            },
+            "subnetBlock": {
+              "type": "object",
+              "metadata": {
+                "description": "Subnet(s) that the vnet will have"
+              }
+            }
+          },
+          "variables": {
+            "subnetValues": "[items(parameters('subnetBlock'))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2019-11-01",
+              "name": "[parameters('virtualNetworkName')]",
+              "location": "[parameters('resourceLocation')]",
+              "properties": {
+                "copy": [
+                  {
+                    "name": "subnets",
+                    "count": "[length(variables('subnetValues'))]",
+                    "input": {
+                      "name": "[variables('subnetValues')[copyIndex('subnets')].key]",
+                      "properties": {
+                        "addressPrefix": "[variables('subnetValues')[copyIndex('subnets')].value.addressSpace]",
+                        "privateEndpointNetworkPolicies": "[variables('subnetValues')[copyIndex('subnets')].value.privateEndpointPolicies]",
+                        "privateLinkServiceNetworkPolicies": "[variables('subnetValues')[copyIndex('subnets')].value.privateLinkServicePolicies]",
+                        "delegations": "[if(not(empty(variables('subnetValues')[copyIndex('subnets')].value.delegations)), createArray(createObject('name', variables('subnetValues')[copyIndex('subnets')].value.delegations.name, 'properties', createObject('serviceName', variables('subnetValues')[copyIndex('subnets')].value.delegations.servicename))), json('null'))]",
+                        "serviceEndpoints": "[if(variables('subnetValues')[copyIndex('subnets')].value.serviceEndpoints, createArray(createObject('service', 'Microsoft.Storage'), createObject('service', 'Microsoft.Sql')), json('null'))]",
+                        "serviceEndpointPolicies": [],
+                        "routeTable": "[json('null')]",
+                        "networkSecurityGroup": "[json('null')]"
+                      }
+                    }
+                  }
+                ],
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "[parameters('vnetAddressSpace')]"
+                  ]
+                },
+                "dhcpOptions": {},
+                "virtualNetworkPeerings": []
+              }
+            }
+          ],
+          "outputs": {
+            "vnetID": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+              "metadata": {
+                "description": "Resource ID of the virtual Network that was deployed"
+              }
+            },
+            "vnetAddress": {
+              "type": "array",
+              "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))).addressSpace.addressPrefixes]",
+              "metadata": {
+                "description": "Address Space of the virtual network that was deployed"
+              }
+            },
+            "deployedSubnets": {
+              "type": "array",
+              "copy": {
+                "count": "[length(variables('subnetValues'))]",
+                "input": {
+                  "ResourceId": "[reference(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))).subnets[copyIndex()].id]"
+                }
+              },
+              "metadata": {
+                "description": "Resource Ids of the subnets that were deployed"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "vm",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "vmAdminPassword": {
+            "value": "[parameters('vmAdminPassword')]"
+          },
+          "vmAdminUsername": {
+            "value": "[parameters('vmAdminUsername')]"
+          },
+          "vmSize": {
+            "value": "[parameters('vmSize')]"
+          },
+          "vmValues": {
+            "value": "[parameters('vmValues')]"
+          },
+          "resourceLocation": {
+            "value": "[parameters('resourceLocation')]"
+          },
+          "availabilitySetName": {
+            "value": "[parameters('vmAvailabilitySetName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1318.3566",
+              "templateHash": "12375103100251014636"
+            }
+          },
+          "parameters": {
+            "resourceLocation": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Azure region where the resources will be deployed"
+              }
+            },
+            "availabilitySetName": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Name of the availability Set"
+              }
+            },
+            "vmSize": {
+              "type": "string",
+              "metadata": {
+                "description": "Instance size the vm(s) will have"
+              }
+            },
+            "vmValues": {
+              "type": "object",
+              "defaultValue": {},
+              "metadata": {
+                "description": "Object containing the values related to vm(s)"
+              }
+            },
+            "vmAdminUsername": {
+              "type": "string",
+              "metadata": {
+                "description": "Local Admin Username for the vm(s)"
+              }
+            },
+            "vmAdminPassword": {
+              "type": "secureString",
+              "metadata": {
+                "description": "Local Admin Password for the vm(s)"
+              }
+            }
+          },
+          "resources": [
+            {
+              "copy": {
+                "name": "windowsvm",
+                "count": "[length(range(1, parameters('vmValues').vmCount))]"
+              },
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2021-11-01",
+              "name": "[format('{0}-vm{1}', parameters('vmValues').vmNamePrefix, range(1, parameters('vmValues').vmCount)[copyIndex()])]",
+              "location": "[parameters('resourceLocation')]",
+              "identity": "[if(parameters('vmValues').enableVmIdentity, createObject('type', 'systemAssigned'), json('null'))]",
+              "properties": {
+                "availabilitySet": {
+                  "id": "[if(not(empty(parameters('availabilitySetName'))), reference(resourceId('Microsoft.Resources/deployments', 'avset'), '2020-10-01').outputs.Id.value, json('null'))]"
+                },
+                "hardwareProfile": {
+                  "vmSize": "[parameters('vmSize')]"
+                },
+                "billingProfile": {},
+                "osProfile": {
+                  "computerName": "[format('{0}-vm{1}', parameters('vmValues').vmNamePrefix, range(1, parameters('vmValues').vmCount)[copyIndex()])]",
+                  "adminUsername": "[parameters('vmAdminUsername')]",
+                  "adminPassword": "[parameters('vmAdminPassword')]",
+                  "windowsConfiguration": {
+                    "enableAutomaticUpdates": true,
+                    "patchSettings": {
+                      "patchMode": "AutomaticByPlatform",
+                      "enableHotpatching": false
+                    },
+                    "provisionVMAgent": true,
+                    "timeZone": "Eastern Standard Time"
+                  }
+                },
+                "storageProfile": {
+                  "copy": [
+                    {
+                      "name": "dataDisks",
+                      "count": "[length(range(0, parameters('vmValues').vmCount))]",
+                      "input": {
+                        "name": "[format('{0}-vm{1}_DataDisk_{2}', parameters('vmValues').vmNamePrefix, range(1, parameters('vmValues').vmCount)[copyIndex()], range(0, parameters('vmValues').vmCount)[copyIndex('dataDisks')])]",
+                        "diskSizeGB": "[parameters('vmValues').dataDiskSizeGB]",
+                        "lun": "[range(0, parameters('vmValues').vmCount)[copyIndex('dataDisks')]]",
+                        "createOption": "Empty",
+                        "caching": "None",
+                        "managedDisk": {
+                          "storageAccountType": "[parameters('vmValues').dataDiskType]"
+                        }
+                      }
+                    }
+                  ],
+                  "imageReference": {
+                    "publisher": "MicrosoftWindowsServer",
+                    "offer": "WindowsServer",
+                    "sku": "2019-datacenter-gensecond",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "createOption": "FromImage",
+                    "name": "[format('{0}-vm{1}_OSDisk', parameters('vmValues').vmNamePrefix, range(1, parameters('vmValues').vmCount)[copyIndex()])]",
+                    "caching": "ReadWrite",
+                    "diskSizeGB": "[parameters('vmValues').osDiskSizeGB]",
+                    "managedDisk": {
+                      "storageAccountType": "[parameters('vmValues').osDiskType]"
+                    }
+                  }
+                },
+                "networkProfile": "[if(not(empty(parameters('vmValues').vmSecondaryNicSubnet)), createObject('networkInterfaces', createArray(createObject('id', reference(resourceId('Microsoft.Resources/deployments', format('vNicPrimary{0}', range(1, parameters('vmValues').vmCount)[range(1, parameters('vmValues').vmCount)[copyIndex()]]))).outputs.vNicResourceId.value, 'properties', createObject('primary', true())), createObject('id', reference(resourceId('Microsoft.Resources/deployments', format('vNicSecondary{0}', range(1, parameters('vmValues').vmCount)[range(1, parameters('vmValues').vmCount)[copyIndex()]])), '2020-10-01').outputs.vNicResourceId.value, 'properties', createObject('primary', false())))), createObject('networkIntefaces', createArray(createObject('id', reference(resourceId('Microsoft.Resources/deployments', format('vNicPrimary{0}', range(1, parameters('vmValues').vmCount)[range(1, parameters('vmValues').vmCount)[copyIndex()]]))).outputs.vNicResourceId.value, 'properties', createObject('primary', true())))))]",
+                "licenseType": "[if(parameters('vmValues').applyAzureHybridBenefit, 'Windows_Server', string(null()))]",
+                "diagnosticsProfile": {
+                  "bootDiagnostics": {
+                    "enabled": "[parameters('vmValues').bootDiagnostics.enabled]",
+                    "storageUri": "[if(and(and(or(not(parameters('vmValues').bootDiagnostics.newStorageAccount), empty(parameters('vmValues').bootDiagnostics.newStorageAccount)), parameters('vmValues').bootDiagnostics.enabled), not(empty(parameters('vmValues').bootDiagnostics.storageAccountRG))), extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('vmValues').bootDiagnostics.storageAccountRG), 'Microsoft.Storage/storageAccounts', parameters('vmValues').bootDiagnostics.storageAccountName), if(and(parameters('vmValues').bootDiagnostics.enabled, or(parameters('vmValues').bootDiagnostics.newStorageAccount, empty(parameters('vmValues').bootDiagnostics.newStorageAccount))), reference(resourceId('Microsoft.Resources/deployments', 'vmBootDiagstorageAccount'), '2020-10-01').outputs.storageAccountId.value, json('null')))]"
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'avset')]",
+                "[resourceId('Microsoft.Resources/deployments', 'vmBootDiagstorageAccount')]",
+                "[resourceId('Microsoft.Resources/deployments', format('vNicPrimary{0}', range(1, parameters('vmValues').vmCount)[range(1, parameters('vmValues').vmCount)[copyIndex()]]))]",
+                "[resourceId('Microsoft.Resources/deployments', format('vNicPrimary{0}', range(1, parameters('vmValues').vmCount)[range(1, parameters('vmValues').vmCount)[copyIndex()]]))]",
+                "[resourceId('Microsoft.Resources/deployments', format('vNicSecondary{0}', range(1, parameters('vmValues').vmCount)[range(1, parameters('vmValues').vmCount)[copyIndex()]]))]"
+              ]
+            },
+            {
+              "condition": "[and(parameters('vmValues').bootDiagnostics.enabled, or(parameters('vmValues').bootDiagnostics.newStorageAccount, empty(parameters('vmValues').bootDiagnostics.newStorageAccount)))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "vmBootDiagstorageAccount",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "storageAccountNamePrefix": {
+                    "value": "[parameters('vmValues').bootDiagnostics.storageAccountName]"
+                  },
+                  "resourceLocation": {
+                    "value": "[parameters('resourceLocation')]"
+                  },
+                  "storageAccountKind": {
+                    "value": "StorageV2"
+                  },
+                  "storageAccountSku": {
+                    "value": "Standard_LRS"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1318.3566",
+                      "templateHash": "16769142681570276557"
+                    }
+                  },
+                  "parameters": {
+                    "storageAccountNamePrefix": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Name of the storage account that will be deployed"
+                      }
+                    },
+                    "resourceLocation": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]",
+                      "metadata": {
+                        "description": "Azure region where the storage account will be deployed"
+                      }
+                    },
+                    "storageAccountSku": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Storage account SKU"
+                      }
+                    },
+                    "storageAccountKind": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Type of the storage account that will be deployed"
+                      }
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Storage/storageAccounts",
+                      "apiVersion": "2021-08-01",
+                      "name": "[format('{0}st', parameters('storageAccountNamePrefix'))]",
+                      "location": "[parameters('resourceLocation')]",
+                      "sku": {
+                        "name": "[parameters('storageAccountSku')]"
+                      },
+                      "kind": "[parameters('storageAccountKind')]",
+                      "properties": {
+                        "accessTier": "Hot",
+                        "minimumTlsVersion": "TLS1_2",
+                        "supportsHttpsTrafficOnly": true,
+                        "allowBlobPublicAccess": true,
+                        "allowSharedKeyAccess": true,
+                        "allowCrossTenantReplication": true,
+                        "defaultToOAuthAuthentication": false,
+                        "isHnsEnabled": false,
+                        "isSftpEnabled": false,
+                        "encryption": {
+                          "keySource": "Microsoft.Storage",
+                          "services": {
+                            "blob": {
+                              "enabled": true
+                            },
+                            "file": {
+                              "enabled": true
+                            },
+                            "table": {
+                              "enabled": true
+                            },
+                            "queue": {
+                              "enabled": true
+                            }
+                          },
+                          "requireInfrastructureEncryption": false
+                        },
+                        "networkAcls": "[json('null')]",
+                        "publicNetworkAccess": "Enabled",
+                        "routingPreference": {
+                          "routingChoice": "MicrosoftRouting"
+                        }
+                      }
+                    },
+                    {
+                      "type": "Microsoft.Storage/storageAccounts/blobServices",
+                      "apiVersion": "2021-08-01",
+                      "name": "[format('{0}/{1}', format('{0}st', parameters('storageAccountNamePrefix')), 'default')]",
+                      "properties": {
+                        "automaticSnapshotPolicyEnabled": false,
+                        "changeFeed": {
+                          "enabled": false,
+                          "retentionInDays": 7
+                        },
+                        "containerDeleteRetentionPolicy": {
+                          "days": 7,
+                          "enabled": true
+                        },
+                        "restorePolicy": {
+                          "enabled": false
+                        },
+                        "deleteRetentionPolicy": {
+                          "enabled": true,
+                          "days": 7
+                        },
+                        "isVersioningEnabled": false
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}st', parameters('storageAccountNamePrefix')))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.Storage/storageAccounts/fileServices",
+                      "apiVersion": "2021-08-01",
+                      "name": "[format('{0}/{1}', format('{0}st', parameters('storageAccountNamePrefix')), 'default')]",
+                      "properties": {
+                        "shareDeleteRetentionPolicy": {
+                          "enabled": true,
+                          "days": 7
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}st', parameters('storageAccountNamePrefix')))]"
+                      ]
+                    }
+                  ],
+                  "outputs": {
+                    "storageAccountId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Storage/storageAccounts', format('{0}st', parameters('storageAccountNamePrefix')))]"
+                    },
+                    "storageAccountBlobEndpoint": {
+                      "type": "string",
+                      "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', format('{0}st', parameters('storageAccountNamePrefix')))).primaryEndpoints.blob]"
+                    },
+                    "storageAccountFileEndpoint": {
+                      "type": "string",
+                      "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', format('{0}st', parameters('storageAccountNamePrefix')))).primaryEndpoints.file]"
+                    },
+                    "storageAccountQueueEndpoint": {
+                      "type": "string",
+                      "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', format('{0}st', parameters('storageAccountNamePrefix')))).primaryEndpoints.queue]"
+                    },
+                    "storageAccountTableEndpoint": {
+                      "type": "string",
+                      "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', format('{0}st', parameters('storageAccountNamePrefix')))).primaryEndpoints.table]"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "condition": "[not(empty(parameters('availabilitySetName')))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "avset",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "availabilitySetName": {
+                    "value": "[parameters('availabilitySetName')]"
+                  },
+                  "resourceLocation": {
+                    "value": "[parameters('resourceLocation')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1318.3566",
+                      "templateHash": "11124230008051016463"
+                    }
+                  },
+                  "parameters": {
+                    "availabilitySetName": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Details of the availability set described"
+                      }
+                    },
+                    "resourceLocation": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]",
+                      "metadata": {
+                        "description": "Location where the availabily set will be deployed"
+                      }
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Compute/availabilitySets",
+                      "apiVersion": "2021-11-01",
+                      "name": "[parameters('availabilitySetName')]",
+                      "location": "[parameters('resourceLocation')]",
+                      "sku": {
+                        "name": "aligned"
+                      },
+                      "properties": {
+                        "platformFaultDomainCount": 5,
+                        "platformUpdateDomainCount": 3
+                      }
+                    }
+                  ],
+                  "outputs": {
+                    "Id": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySetName'))]"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "copy": {
+                "name": "pNicModule",
+                "count": "[length(range(1, parameters('vmValues').vmCount))]"
+              },
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "[format('vNicPrimary{0}', range(1, parameters('vmValues').vmCount)[copyIndex()])]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "vNicVnetName": {
+                    "value": "[parameters('vmValues').vmVnetName]"
+                  },
+                  "vNicPrimarySubnet": {
+                    "value": "[parameters('vmValues').vmPrimaryNicSubnet]"
+                  },
+                  "vnetRG": {
+                    "value": "[parameters('vmValues').vmVnetRG]"
+                  },
+                  "vNicSecondarySubnet": {
+                    "value": "[parameters('vmValues').vmSecondaryNicSubnet]"
+                  },
+                  "vNicName": {
+                    "value": "[format('{0}-vm{1}_nic1', parameters('vmValues').vmNamePrefix, range(1, parameters('vmValues').vmCount)[copyIndex()])]"
+                  },
+                  "resourceLocation": {
+                    "value": "[parameters('resourceLocation')]"
+                  },
+                  "vmSize": {
+                    "value": "[parameters('vmSize')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1318.3566",
+                      "templateHash": "9629954360355268297"
+                    }
+                  },
+                  "parameters": {
+                    "vNicName": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Name prefix of the vNIC"
+                      }
+                    },
+                    "resourceLocation": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]",
+                      "metadata": {
+                        "description": "Location of the resource being deployed"
+                      }
+                    },
+                    "vNicVnetName": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Virtual Network that will be used by the vNIC"
+                      }
+                    },
+                    "vnetRG": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Resource Group where the vnet was deployed"
+                      }
+                    },
+                    "vNicPrimarySubnet": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Subnet where the primary vNic will be deployed"
+                      }
+                    },
+                    "vNicSecondarySubnet": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Subnet where the secondary vNIC will be deployed"
+                      }
+                    },
+                    "vmSize": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Size of the virtual machine to which the vNIC will be attached"
+                      }
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Network/networkInterfaces",
+                      "apiVersion": "2021-05-01",
+                      "name": "[parameters('vNicName')]",
+                      "location": "[parameters('resourceLocation')]",
+                      "properties": {
+                        "ipConfigurations": [
+                          {
+                            "name": "ipconfig1",
+                            "properties": {
+                              "privateIPAllocationMethod": "Dynamic",
+                              "subnet": {
+                                "id": "[if(empty(parameters('vNicSecondarySubnet')), extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('vnetRG')), 'Microsoft.Network/virtualNetworks/subnets', split(format('{0}/{1}', parameters('vNicVnetName'), parameters('vNicPrimarySubnet')), '/')[0], split(format('{0}/{1}', parameters('vNicVnetName'), parameters('vNicPrimarySubnet')), '/')[1]), resourceId('Microsoft.Network/virtualNetworks/subnets', split(format('{0}/{1}', parameters('vNicVnetName'), parameters('vNicSecondarySubnet')), '/')[0], split(format('{0}/{1}', parameters('vNicVnetName'), parameters('vNicSecondarySubnet')), '/')[1]))]"
+                              }
+                            }
+                          }
+                        ],
+                        "enableAcceleratedNetworking": "[if(and(empty(parameters('vNicSecondarySubnet')), or(or(not(equals(parameters('vmSize'), 'Standard_B2ms')), not(equals(parameters('vmSize'), 'Standard_B4ms'))), not(equals(parameters('vmSize'), 'Standard_B8ms')))), true(), false())]"
+                      }
+                    }
+                  ],
+                  "outputs": {
+                    "vNicResourceId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Network/networkInterfaces', parameters('vNicName'))]"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "condition": "[not(empty(parameters('vmValues').vmSecondaryNicSubnet))]",
+              "copy": {
+                "name": "sNicModule",
+                "count": "[length(range(1, parameters('vmValues').vmCount))]"
+              },
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "[format('vNicSecondary{0}', range(1, parameters('vmValues').vmCount)[copyIndex()])]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "vNicSecondarySubnet": {
+                    "value": "[parameters('vmValues').vmSecondaryNicSubnet]"
+                  },
+                  "vnetRG": {
+                    "value": "[parameters('vmValues').vmVnetRG]"
+                  },
+                  "vNicName": {
+                    "value": "[format('{0}-vm{1}_nic2', parameters('vmValues').vmNamePrefix, range(1, parameters('vmValues').vmCount)[copyIndex()])]"
+                  },
+                  "vNicPrimarySubnet": {
+                    "value": "[parameters('vmValues').vmPrimaryNicSubnet]"
+                  },
+                  "vNicVnetName": {
+                    "value": "[parameters('vmValues').vmVnetName]"
+                  },
+                  "resourceLocation": {
+                    "value": "[parameters('resourceLocation')]"
+                  },
+                  "vmSize": {
+                    "value": "[parameters('vmSize')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1318.3566",
+                      "templateHash": "9629954360355268297"
+                    }
+                  },
+                  "parameters": {
+                    "vNicName": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Name prefix of the vNIC"
+                      }
+                    },
+                    "resourceLocation": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]",
+                      "metadata": {
+                        "description": "Location of the resource being deployed"
+                      }
+                    },
+                    "vNicVnetName": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Virtual Network that will be used by the vNIC"
+                      }
+                    },
+                    "vnetRG": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Resource Group where the vnet was deployed"
+                      }
+                    },
+                    "vNicPrimarySubnet": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Subnet where the primary vNic will be deployed"
+                      }
+                    },
+                    "vNicSecondarySubnet": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Subnet where the secondary vNIC will be deployed"
+                      }
+                    },
+                    "vmSize": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Size of the virtual machine to which the vNIC will be attached"
+                      }
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Network/networkInterfaces",
+                      "apiVersion": "2021-05-01",
+                      "name": "[parameters('vNicName')]",
+                      "location": "[parameters('resourceLocation')]",
+                      "properties": {
+                        "ipConfigurations": [
+                          {
+                            "name": "ipconfig1",
+                            "properties": {
+                              "privateIPAllocationMethod": "Dynamic",
+                              "subnet": {
+                                "id": "[if(empty(parameters('vNicSecondarySubnet')), extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('vnetRG')), 'Microsoft.Network/virtualNetworks/subnets', split(format('{0}/{1}', parameters('vNicVnetName'), parameters('vNicPrimarySubnet')), '/')[0], split(format('{0}/{1}', parameters('vNicVnetName'), parameters('vNicPrimarySubnet')), '/')[1]), resourceId('Microsoft.Network/virtualNetworks/subnets', split(format('{0}/{1}', parameters('vNicVnetName'), parameters('vNicSecondarySubnet')), '/')[0], split(format('{0}/{1}', parameters('vNicVnetName'), parameters('vNicSecondarySubnet')), '/')[1]))]"
+                              }
+                            }
+                          }
+                        ],
+                        "enableAcceleratedNetworking": "[if(and(empty(parameters('vNicSecondarySubnet')), or(or(not(equals(parameters('vmSize'), 'Standard_B2ms')), not(equals(parameters('vmSize'), 'Standard_B4ms'))), not(equals(parameters('vmSize'), 'Standard_B8ms')))), true(), false())]"
+                      }
+                    }
+                  ],
+                  "outputs": {
+                    "vNicResourceId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Network/networkInterfaces', parameters('vNicName'))]"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "condition": "[not(empty(parameters('vmValues').customScriptExtension))]",
+              "copy": {
+                "name": "customScriptExtension",
+                "count": "[length(range(1, parameters('vmValues').vmCount))]"
+              },
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "[format('{0}-vm{1}-extension', parameters('vmValues').vmNamePrefix, range(1, parameters('vmValues').vmCount)[copyIndex()])]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "resourceLocation": {
+                    "value": "[parameters('resourceLocation')]"
+                  },
+                  "customScriptExtentionName": {
+                    "value": "[format('{0}-vm{1}/{2}', parameters('vmValues').vmNamePrefix, range(1, parameters('vmValues').vmCount)[copyIndex()], parameters('vmValues').customScriptExtension.Name)]"
+                  },
+                  "scriptStorageAccountName": {
+                    "value": "[parameters('vmValues').customScriptExtension.StorageAccountName]"
+                  },
+                  "scriptStorageAccountRG": {
+                    "value": "[parameters('vmValues').customScriptExtension.StorageAccountRG]"
+                  },
+                  "scriptPathinStorageAccount": {
+                    "value": "[parameters('vmValues').customScriptExtension.scriptPath]"
+                  },
+                  "commandToExecute": {
+                    "value": "[parameters('vmValues').customScriptExtension.commandToExecute]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1318.3566",
+                      "templateHash": "752492094805172479"
+                    }
+                  },
+                  "parameters": {
+                    "resourceLocation": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]",
+                      "metadata": {
+                        "description": "Azure region of the custom script extension"
+                      }
+                    },
+                    "customScriptExtentionName": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Name of the custom script extension"
+                      }
+                    },
+                    "scriptStorageAccountName": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Name of the storage Account where the script resides"
+                      }
+                    },
+                    "scriptStorageAccountRG": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Name of the resource group where the storage Account resides"
+                      }
+                    },
+                    "scriptPathinStorageAccount": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Script path within the storage account"
+                      }
+                    },
+                    "commandToExecute": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Command to be executed by the custom script extension"
+                      }
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Compute/virtualMachines/extensions",
+                      "apiVersion": "2021-11-01",
+                      "name": "[parameters('customScriptExtentionName')]",
+                      "location": "[parameters('resourceLocation')]",
+                      "properties": {
+                        "publisher": "Microsoft.Compute",
+                        "type": "CustomScriptExtension",
+                        "typeHandlerVersion": "1.9",
+                        "autoUpgradeMinorVersion": true,
+                        "protectedSettings": {
+                          "storageAccountName": "[parameters('scriptStorageAccountName')]",
+                          "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('scriptStorageAccountName')), '2021-08-01').keys[0].value]",
+                          "fileUris": "[array(format('scriptStorageAccount.properties.primaryEndpoints.blob/{0}', parameters('scriptPathinStorageAccount')))]",
+                          "commandToExecute": "[parameters('commandToExecute')]"
+                        }
+                      }
+                    }
+                  ],
+                  "outputs": {
+                    "resourceId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Compute/virtualMachines/extensions', split(parameters('customScriptExtentionName'), '/')[0], split(parameters('customScriptExtentionName'), '/')[1])]"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "resourceId": {
+              "type": "array",
+              "copy": {
+                "count": "[length(range(1, parameters('vmValues').vmCount))]",
+                "input": {
+                  "resourceId": "[resourceId('Microsoft.Compute/virtualMachines', format('{0}-vm{1}', parameters('vmValues').vmNamePrefix, range(1, parameters('vmValues').vmCount)[0]))]"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
