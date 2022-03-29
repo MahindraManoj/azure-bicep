@@ -23,17 +23,19 @@ param vmAdminUsername string = 'vmlocadmin'
 param vmAdminPassword string
 
 
-module rg 'modules/resourcegroup.bicep' = {
-  scope: subscription('Pay-As-You-Go')
+module rg 'modules/ResourceGroup/resourcegroup.bicep' = {
   name: 'resourceGroup'
   params: {
     resourceGroupBlock: resourceGroupBlock
   }
 }
 
-module vnetSnet 'modules/vnetwithsubnets.bicep' = {
+module vnetSnet 'modules/Network/vnetwithsubnets.bicep' = {
   scope: resourceGroup(resourceGroupBlock.name)
   name: 'virtualNetwork'
+  dependsOn: [
+    rg
+  ]
   params: {
     resourceLocation: resourceLocation
     virtualNetworkName: virtualNetworkName
@@ -42,9 +44,13 @@ module vnetSnet 'modules/vnetwithsubnets.bicep' = {
   }
 }
 
-module vm 'modules/virtualmachine.bicep' = {
-  name: 'vm'
-  scope: 
+module vm 'modules/Compute/virtualmachine.bicep' = {
+  name: 'windows'
+  scope: resourceGroup(resourceGroupBlock.name)
+  dependsOn: [
+    rg
+    vnetSnet
+  ]
   params: {
     vmAdminPassword: vmAdminPassword  
     vmAdminUsername: vmAdminUsername
@@ -54,3 +60,13 @@ module vm 'modules/virtualmachine.bicep' = {
     availabilitySetName: vmAvailabilitySetName
   }
 }
+
+//output(s) of this bicep config file
+output vmsId array = [for i in range(0, vmValues.vmCount): {
+  vmResourceId: vm.outputs.vmsId[i]
+}]
+
+output vmsIPAddress array = [for i in range(0, vmValues.vmCount): {
+  vmprimaryIPAddreses: vm.outputs.vmsIPAddresses[i].primaryvNicIPAddress
+}]
+

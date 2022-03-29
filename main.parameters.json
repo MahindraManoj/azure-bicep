@@ -2,9 +2,6 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "resorceLocation": {
-            "value": "[resourceGroup().location]"
-        },
         "resourceGroupBlock": {
             "value": {
                 "name": "myRG",
@@ -28,14 +25,14 @@
                         "name": "AppServicePlan",
                         "serviceName": "Microsoft.Web/serverFarms"
                     },
-                    "serviceEndpoints": false
+                    "serviceEndpoints": true
                 },
                 "subnet2": {
                     "addressSpace": "10.10.10.128/25",
                     "privateEndpointPolicies": "Enabled",
                     "privateLinkServicePolicies": "Enabled",
                     "delegations": {},
-                    "serviceEndpoints": true
+                    "serviceEndpoints": false
                 }
             }
         },
@@ -51,9 +48,11 @@
         "vmValues": {
             "value": {
                 "vmNamePrefix": "my-az",
-                "vmVnetRg": "",
-                "vmPrimaryNicSubnet": "subnet1",
-                "vmSecondaryNicSubnet": "",
+                "vmVnetRg": "myRG",
+                "vmVnetName": "myVnet",
+                "primaryVnicSubnetName": "subnet2",
+                "secondaryVnicSubnetName": "",
+                "enablevNicAcceleratedNetworking": false,
                 "enableManagedIdentity": false,
                 "vmCount": 1,
                 "osDiskType": "Standard_LRS",
@@ -68,7 +67,7 @@
                     "newstorageAccount": true,
                     "storageAccountRG": ""
                 },
-                "customScriptExtention": {}
+                "customScriptExtension": {}
             }
         }
     }

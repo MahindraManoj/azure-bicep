@@ -19,7 +19,7 @@ param storageAccountKind string
 
 // create storage account in Azure
 resource sa 'Microsoft.Storage/storageAccounts@2021-08-01' = {
-  name: '${storageAccountNamePrefix}st'
+  name: storageAccountNamePrefix
   location: resourceLocation
   sku: {
     name: storageAccountSku
@@ -67,7 +67,7 @@ resource defaultBlob 'Microsoft.Storage/storageAccounts/blobServices@2021-08-01'
   properties: {
     automaticSnapshotPolicyEnabled: false
     changeFeed: {
-      enabled: false
+      enabled: true
       retentionInDays: 7
     }
     containerDeleteRetentionPolicy: {
@@ -88,6 +88,9 @@ resource defaultBlob 'Microsoft.Storage/storageAccounts/blobServices@2021-08-01'
 resource defaultFile 'Microsoft.Storage/storageAccounts/fileServices@2021-08-01' = {
   name: 'default'
   parent: sa
+  dependsOn: [
+    defaultBlob
+  ]
   properties: {
     shareDeleteRetentionPolicy: {
       enabled: true
