@@ -16,7 +16,7 @@ param primaryVnicSubnetName string
 param secondaryVnicSubnetName string
 
 @description('Location of the resource being deployed')
-param resourceLocation string = resourceGroup().location
+param resourceLocation string
 
 @description('Enable accelerated networking on the vNic')
 param enablevNicAcceleratedNetworking bool

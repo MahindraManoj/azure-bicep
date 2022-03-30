@@ -5,7 +5,7 @@ param virtualNetworkName string
 @description('Address space that vnet will have')
 param vnetAddressSpace string
 @description('Location of the resource(s) deployed')
-param resourceLocation string = resourceGroup().location
+param resourceLocation string
 @description('Subnet(s) that the vnet will have')
 param subnetBlock object
 

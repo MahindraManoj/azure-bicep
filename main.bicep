@@ -66,7 +66,5 @@ output vmsId array = [for i in range(0, vmValues.vmCount): {
   vmResourceId: vm.outputs.vmsId[i]
 }]
 
-output vmsIPAddress array = [for i in range(0, vmValues.vmCount): {
-  vmprimaryIPAddreses: vm.outputs.vmsIPAddresses[i].primaryvNicIPAddress
-}]
+output vmsPrimaryIPAddress array = [for i in range(0, vmValues.vmCount): vm.outputs.vmsPrimaryNicIp[i]]
 

@@ -3,7 +3,7 @@
 @description('Name of the storage account that will be deployed')
 param storageAccountNamePrefix string
 @description('Azure region where the storage account will be deployed')
-param resourceLocation string = resourceGroup().location
+param resourceLocation string
 @description('Storage account SKU')
 param storageAccountSku string
 @description('Type of the storage account that will be deployed')

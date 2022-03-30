@@ -1,7 +1,7 @@
 //Module to provision custom script extension on the virtual machine for the post vm deployment configuration
 
 @description('Azure region of the custom script extension')
-param resourceLocation string = resourceGroup().location
+param resourceLocation string
 
 @description('Name of the custom script extension')
 param customScriptExtentionName string

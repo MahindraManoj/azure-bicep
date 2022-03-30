@@ -2,7 +2,7 @@
 // It calls several other bicep modules behind the scenes to deploy the required resources before creating the vm(s)
 
 @description('Azure region where the resources will be deployed')
-param resourceLocation string = resourceGroup().location
+param resourceLocation string
 @description('Name of the availability Set')
 param availabilitySetName string = '' //keep it empty if you don't want an availabilitySet
 @description('Instance size the vm(s) will have')
@@ -12,8 +12,8 @@ param vmValues object = {
 /* vmNamePrefix:                   //string. virtual machine name prefix. Should not be more than 12 chars
     vmVnetRg:                      //string. Resource group of the vnet used by the vm or vms
     vmVnetName:                    //string. Vnet where the vm(s) reside
-    primaryVicSubnetName:              //string. Subnet where the primary nic of the vm(s) will be deployed
-    secondaryVnicSubnetName:           //string or empty String. Subnet where the sec nic of the vm(s) will be deployed (OPTIONAL)
+    primaryVicSubnetName:          //string. Subnet where the primary nic of the vm(s) will be deployed
+    secondaryVnicSubnetName:       //string or empty String. Subnet where the sec nic of the vm(s) will be deployed (OPTIONAL)
     enableAcceleratedNetworking:   //bool. Enable accelerated networking on the primary vNic depending on the size of the vm(s)
     enableManagedIdentity:         //bool. Set it to true to enable Managed System Identity
     vmCount:                       //int. Number of vms to be deployed
@@ -196,11 +196,9 @@ module customScriptExtension 'customscriptextension.bicep' = [for i in range(0, 
 }]
 
 //outputs from this bicep module
-output vmsId array = [for o in range (0, vmValues.vmCount): {
-  resourceId: windowsvm[o].id
-}]
+output vmsId array = [for o in range (0, vmValues.vmCount): windowsvm[o].id]
 
-output vmsIPAddresses array = [for o in range(0, vmValues.vmCount): {
-  primaryvNicIPAddress: pNicModule[o].outputs.vNicIPaddress
-  secondaryvNicIpAddress: !empty(vmValues.secondaryVnicSubnetName) ? sNicModule[o].outputs.vNicIPaddress : json('null')
-}]
+output vmsPrimaryNicIp array = [for o in range(0, vmValues.vmCount): pNicModule[o].outputs.vNicIPaddress]
+
+output vmsSecondaryNicIp array = [for o in range (0, vmValues.vmCount): (!empty(vmValues.secondaryVnicSubnetname)) ? sNicModule[o].outputs.vNicIPaddress : json('null')]
+

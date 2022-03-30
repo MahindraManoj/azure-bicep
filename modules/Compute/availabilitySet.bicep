@@ -2,7 +2,7 @@
 param availabilitySetName string
 
 @description('Location where the availabily set will be deployed')
-param resourceLocation string = resourceGroup().location
+param resourceLocation string
 
 // Create an availability set
 resource avset 'Microsoft.Compute/availabilitySets@2021-11-01' = {
