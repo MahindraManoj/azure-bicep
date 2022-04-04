@@ -12,3 +12,5 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   tags: !empty(resourceGroupBlock.tags) ? resourceGroupBlock.tags : json('null')
   properties: {}
 }
+
+output resourceId string = resourceGroup.id

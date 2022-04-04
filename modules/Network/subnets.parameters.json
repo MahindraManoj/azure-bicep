@@ -5,7 +5,7 @@
         "vnetName": {
             "value": "my-vnet"
         },
-        "subnetBlock": {
+        "subnetValues": {
             "value": {
                 "subnet1": {
                     "addressSpace": "10.10.10.0/25",

@@ -17,6 +17,7 @@ resource privateDNSZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   properties: {}
   resource dnsVnetLink 'virtualNetworkLinks' = {
     name: '${privateDNSZoneVnetName}-link'
+    location: 'global'
     properties: {
       registrationEnabled: false
       virtualNetwork: {

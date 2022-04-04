@@ -2,30 +2,35 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "virtualNetworkName": {
-            "value": "my-vnet"
-        },
-        "vnetAddressSpace": {
-            "value": "10.10.10.0/24"
-        },
-        "subnetBlock": {
+        "virtualNetworkValues": {
             "value": {
-                "subnet1": {
-                    "addressSpace": "10.10.10.0/25",
-                    "privateEndpointPolicies": "Enabled",
-                    "privateLinkServicePolicies": "Enabled",
-                    "delegations": {
-                        "name": "AppServicePlan",
-                        "serviceName": "Microsoft.Web/serverFarms"
+                "name": "my-vnet",
+                "addressPrefix": "10.10.0.0/24",
+                "subnets": {
+                    "privateendpoints-snet": {
+                        "addressSpace": "10.10.10.0/27",
+                        "privateEndpointPolicies": "Disabled",
+                        "privateLinkServicePolicies": "Enabled",
+                        "delegations": {},
+                        "serviceEndpoints": true
                     },
-                    "serviceEndpoints": true
-                },
-                "subnet2": {
-                    "addressSpace": "10.10.10.128/25",
-                    "privateEndpointPolicies": "Enabled",
-                    "privateLinkServicePolicies": "Enabled",
-                    "delegations": {},
-                    "serviceEndpoints": false
+                    "appservice-snet": {
+                        "addressSpace": "10.10.10.32/27",
+                        "privateEndpointPolicies": "Enabled",
+                        "privateLinkServicePolicies": "Enabled",
+                        "delegations": {
+                            "name": "AppServicePlan",
+                            "serviceName": "Microsoft.Web/serverFarms"
+                        },
+                        "serviceEndpoints": false
+                    },
+                    "apim-snet": {
+                        "addressSpace": "10.10.10.64/27",
+                        "privateEndpointPolicies": "Enabled",
+                        "privateLinkServicePolicies": "Enabled",
+                        "delegations": {},
+                        "serviceEndpoints": false
+                    }
                 }
             }
         }

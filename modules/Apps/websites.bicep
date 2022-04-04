@@ -3,16 +3,9 @@
 @description('Azure region where the resource will be deployed')
 param resourceLocation string
 
-@description('Resource Id of the App service plan the app uses')
-param serverFarmId string
-
 @description('Name of the function app or web app')
 param webSiteName string
 
-@allowed([
-  'windows'
-  'linux'
-])
 @description('App service plan hosting platform')
 param webSiteKind string
 
@@ -27,24 +20,41 @@ param appSettings array
 
 @description('Resource Id of the subnet that will be used by the app for vnet integration')
 param vnetSubnetId string
-/*
-param webSiteBlock array = [// array of websites to be created
-  {
-    name: //string
-    kind: '' //string. Allowed values are 'functionapp' and 'app'
-    enableManagedIdentity: '' //bool
-    vnetIntegration: { //OPTIONAL (can be dempty if vnet integration is not needed)
-      vnetName: //string
-      vnetRg: //string
-      subnetName: //string
-    }
-    properties: {
-      hostNameSslStates: []
-      appSettings: [] //shouldn't be empty. Refer documentation for the required app settings on the app
-    }
+
+param appServicePlanvalues object = {
+  name: 'mahiss-asp' //string
+  sku: {
+    name: 'Y1'
+    tier: 'Dynamic'
   }
-]
-*/
+  kind: 'windows' //Allowed values are windows or linux
+  maximumElasticWorkerCount: 3
+}
+
+/*param webSiteBlock object = {
+  name: //string
+  kind: '' //string. Allowed values are 'functionapp' and 'app'
+  enableManagedIdentity: '' //bool
+  vnetIntegration: { //OPTIONAL (can be dempty if vnet integration is not needed)
+    vnetName: //string
+    vnetRg: //string
+    subnetName: //string
+  }
+  properties: {
+    hostNameSslStates: []
+    appSettings: [] //shouldn't be empty. Refer documentation for the required app settings on the app
+  }
+}*/  
+
+//Create ASP to host the app
+module asp 'appserviceplan.bicep' = {
+  name: 'appServicePlan'
+  params: {
+    appServicePlanBlock: appServicePlanvalues
+    resoureLocation: resourceLocation
+  }
+}
+
 // create web app or function app
 resource webSite 'Microsoft.Web/sites@2021-03-01' = {
   name: webSiteName
@@ -60,7 +70,7 @@ resource webSite 'Microsoft.Web/sites@2021-03-01' = {
     hostNamesDisabled: false
     httpsOnly: true
     hostNameSslStates: !empty(hostNameSslStates) ? hostNameSslStates : json('null')
-    serverFarmId: serverFarmId
+    serverFarmId: asp.outputs.aspId
     siteConfig: {
       appSettings: !empty(appSettings) ? appSettings : json('null')
     }
@@ -80,3 +90,5 @@ resource appVnetIntegration 'Microsoft.Web/sites/networkConfig@2021-03-01' = if(
 //outputs
 @description('Resource Id of the app')
 output websiteId string = webSite.id
+
+output appServicePlanId string = asp.outputs.aspId

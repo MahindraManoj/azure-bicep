@@ -4,10 +4,10 @@
 param vnetName string
 
 @description('Subnet(s) that the vnet will have')
-param subnetBlock object
+param subnetValues object
 
 // Converts the subnetBlock dictonary object into an array of key value pairs
-var subnetValues = items(subnetBlock)
+var subnetBlock = items(subnetValues)
 
 // Calling the virtual network resource that was already deployed
 resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
@@ -16,7 +16,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
 
 // Create subnets 
 @batchSize(1)
-resource subnets 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' =  [for subnet in subnetValues : if(subnetBlock != json('null')) {
+resource subnets 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' =  [for subnet in subnetBlock : if(subnetBlock != json('null')) {
   name: subnet.key
   parent: vnet
   properties: {
@@ -46,6 +46,6 @@ resource subnets 'Microsoft.Network/virtualNetworks/subnets@2021-05-01' =  [for 
 }]
 
 @description('Resource Ids of the subnets that were deployed')
-output deployedSubnets array = [for (subnet, i) in subnetValues : {
+output deployedSubnets array = [for (subnet, i) in subnetBlock : {
   ResourceId: subnets[i].id
 }]

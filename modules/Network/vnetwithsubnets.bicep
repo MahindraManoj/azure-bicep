@@ -1,25 +1,38 @@
 //This module creates a vnet with 'n' number of subnets in it.
 
-@description('Name of the virtual network to be created')
-param virtualNetworkName string
-@description('Address space that vnet will have')
-param vnetAddressSpace string
 @description('Location of the resource(s) deployed')
 param resourceLocation string
-@description('Subnet(s) that the vnet will have')
-param subnetBlock object
 
-// Converts the subnetBlock dictonary object into an array of key value pairs
-var subnetValues = items(subnetBlock)
+@description('Details to create the vnet')
+param virtualNetworkValues object /*= {
+  name: '<Name of the vnet>'
+  addressPrefix: '<Address Prefix of the vnet>'
+  subnets: { //below property can be repeated based on the number of subnets needed
+    <NameoftheSubnet>: {
+      addressSpace: ''
+      privateEndpointPolicies: 'Disabled'
+      privateLinkServicePolicies: 'Enabled'
+      delegations: {
+        name: ''
+        serviceName: 'Microsoft.Web/ServerFarms'
+      }
+      serviceEndpoints: false
+    }
+  }
+}
+*/
+
+// Converts the subnets property into an array of key value pairs (dictionary object)
+var subnetValues = items(virtualNetworkValues.subnets)
 
 //create vnet with subnets
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
-  name: virtualNetworkName
+  name: virtualNetworkValues.name
   location: resourceLocation
   properties: {
     addressSpace: {
       addressPrefixes: [
-        vnetAddressSpace
+        virtualNetworkValues.addressPrefix
       ]
     }
     dhcpOptions: {}

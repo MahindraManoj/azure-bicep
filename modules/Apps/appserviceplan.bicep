@@ -12,14 +12,13 @@ param appServicePlanBlock object /*= {
   }
   kind: //string. Allowed values are windows or linux
   maximumElasticWorkerCount: //int
-  }
 }
 */
 // create App service plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
   name: appServicePlanBlock.name
   location: resoureLocation
-  kind: (appServicePlanBlock.kind == 'linux') ? 'linux': json('null')
+  kind: (appServicePlanBlock.kind == 'linux') ? 'linux': string('null')
   sku: {
     name: appServicePlanBlock.sku.name
     tier: appServicePlanBlock.sku.tier

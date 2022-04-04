@@ -4,7 +4,7 @@
 param resourceLocation string
 
 @description('Values for the log analytics resource')
-param logAnalyticsWorkspaceBlock object = {
+param logAnalyticsWorkspaceValues object = {
   /*
   name: ''
   sku: '' 
@@ -13,11 +13,11 @@ param logAnalyticsWorkspaceBlock object = {
 
 // Create log analytics workspace
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
-  name: logAnalyticsWorkspaceBlock.name
+  name: logAnalyticsWorkspaceValues.name
   location: resourceLocation
   properties: {
     sku: {
-      name: logAnalyticsWorkspaceBlock.sku
+      name: logAnalyticsWorkspaceValues.sku
     }
   }
 }
