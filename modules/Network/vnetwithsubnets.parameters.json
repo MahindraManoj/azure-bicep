@@ -5,7 +5,7 @@
         "virtualNetworkValues": {
             "value": {
                 "name": "my-vnet",
-                "addressPrefix": "10.10.0.0/24",
+                "addressPrefix": "10.10.10.0/24",
                 "subnets": {
                     "privateendpoints-snet": {
                         "addressSpace": "10.10.10.0/27",
