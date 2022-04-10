@@ -22,8 +22,7 @@ param dataDiskType string
 
 param dataDiskSizeGB int
 
-
-resource windowsVM 'Microsoft.Compute/virtualMachines@2020-12-01' = {
+resource vm 'Microsoft.Compute/virtualMachines@2020-12-01' = {
   name: vmName
   location: resourceLocation
   properties: {
@@ -88,21 +87,6 @@ resource windowsVM 'Microsoft.Compute/virtualMachines@2020-12-01' = {
       }
     }
   }
-  resource customScriptExtension 'extensions' = {
-    name: 'extensionName'
-    location: resourceLocation
-    properties: {
-      publisher: 'Microsoft.Compute'
-      type: 'customScriptExtension'
-      typeHandlerVersion: '1.9'
-      autoUpgradeMinorVersion: true
-      protectedSettings: {
-        storageAccountName: ''
-        storageAccountAccessKey: ''
-        fileUris: array('')
-      }
-    }
-  }
 }
 
-output resourceId string = windowsVM.id
+output resourceId string = vm.id

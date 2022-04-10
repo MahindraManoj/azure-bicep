@@ -100,88 +100,24 @@ module sNicModule '../Network/networkInterface.bicep' = [for vnic in range(1, vm
 }]
 
 //Create Windows VM(s)
-resource windowsvm 'Microsoft.Compute/virtualMachines@2021-11-01' = [for i in range(0, vmValues.vmCount) : {
-  name: '${vmValues.vmNamePrefix}-vm${i+1}'
-  location: resourceLocation
-  identity: (vmValues.enableManagedIdentity) ? {
-    type: 'systemAssigned'
-  } : json('null')
-  properties: {
-    availabilitySet: !empty(availabilitySetName) ? {
-      id: availset.outputs.Id
-    }: json('null')
-    hardwareProfile: {
-      vmSize: vmSize
-    }
-    osProfile: {
-      computerName: '${vmValues.vmNamePrefix}-vm${i+1}'
-      adminUsername: vmAdminUsername
-      adminPassword: vmAdminPassword
-      windowsConfiguration: {
-        enableAutomaticUpdates: true
-        provisionVMAgent: true
-        timeZone: 'Eastern Standard Time'
-      }
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'MicrosoftWindowsServer'
-        offer: 'WindowsServer'
-        sku: '2019-datacenter-gensecond'
-        version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
-        name: '${vmValues.vmNamePrefix}-vm${i+1}_OSDisk'
-        caching: 'ReadWrite'
-        diskSizeGB: int(vmValues.osDiskSizeGB)
-        managedDisk: {
-          storageAccountType: vmValues.osDiskType
-        }
-      }
-      dataDisks: [for d in range(0, vmValues.dataDiskCount):  {
-        name: '${vmValues.vmNamePrefix}-vm${i+1}_DataDisk_${d}'
-        diskSizeGB: (empty(vmValues.dataDiskSizeGB) || (vmValues.dataDiskSizeGB == 0)) ? int(1) : int(vmValues.dataDiskSizeGB)
-        lun: d
-        createOption: 'Empty'
-        caching: 'None'
-        managedDisk: {
-          storageAccountType: empty(vmValues.dataDiskType) ? 'Standard_LRS' : vmValues.dataDiskType
-        }
-      }]
-    }
-    networkProfile: {
-      networkInterfaces: (!empty(vmValues.secondaryVnicSubnetName)) ? [
-        {
-          id: pNicModule[i].outputs.vNicId
-          properties: {
-            primary: true
-          }
-        }
-        {
-          id: sNicModule[i].outputs.vNicId
-          properties: {
-            primary: false
-          }
-        }
-      ]: [
-        {
-          id: pNicModule[i].outputs.vNicId
-          properties: {
-            primary: true
-          }
-        }
-      ]
-    }
-    licenseType: vmValues.applyAzureHybridBenefit ? 'Windows_Server' : json('null')
-    diagnosticsProfile: {
-      bootDiagnostics: {
-        enabled: vmValues.bootDiagnostics.enabled
-        storageUri: (!(vmValues.bootDiagnostics.newStorageAccount) && (vmValues.bootDiagnostics.enabled)) ? existingBootDiagSa.properties.primaryEndpoints.blob : (vmValues.bootDiagnostics.enabled && (vmValues.bootDiagnostics.newStorageAccount)) ? newBootDiagsa.outputs.storageAccountBlobEndpoint : string('null')
-      }
-    }
+module wvm 'windows-vm-resource.bicep' = [for vm in range(0, vmValues.vmCount) : {
+  name: 'virtualMachine${vm+1}'
+  params: {
+    vmSize: vmSize
+    bootDiagStorageAccountUri: (!(vmValues.bootDiagnostics.newStorageAccount) && (vmValues.bootDiagnostics.enabled)) ? existingBootDiagSa.properties.primaryEndpoints.blob : (vmValues.bootDiagnostics.enabled && (vmValues.bootDiagnostics.newStorageAccount)) ? newBootDiagsa.outputs.storageAccountBlobEndpoint : string('null')
+    dataDiskCount: vmValues.dataDiskCount
+    dataDiskSizeGB: (empty(vmValues.dataDiskSizeGB) || (vmValues.dataDiskSizeGB == 0)) ? int(1) : int(vmValues.dataDiskSizeGB)
+    dataDiskType: empty(vmValues.dataDiskType) ? 'Standard_LRS' : vmValues.dataDiskType
+    resourceLocation: resourceLocation
+    vmAdminPassword: vmAdminPassword
+    vmAdminUsername: vmAdminUsername
+    vmName: '${vmValues.vmNamePrefix}-vm${vm+1}'
+    vmPrimaryvNicId: pNicModule[vm].outputs.vNicId
+    vmSecondaryvNicId: !empty(vmValues.vmSecondaryVnicSubnet) ? sNicModule[vm].outputs.vNicId : string('null')
   }
 }]
+
+
 // Calls customScriptExtension module to provision extension on the deloyed vm(s)
 module customScriptExtension 'customscriptextension.bicep' = [for i in range(0, vmValues.vmCount): if(!empty(vmValues.customScriptExtension)) {
   name: '${vmValues.vmNamePrefix}-vm${i+1}-extension'
@@ -196,7 +132,7 @@ module customScriptExtension 'customscriptextension.bicep' = [for i in range(0, 
 }]
 
 //outputs from this bicep module
-output vmsId array = [for o in range (0, vmValues.vmCount): windowsvm[o].id]
+output vmsId array = [for o in range (0, vmValues.vmCount): wvm[o].outputs.resourceId]
 
 output vmsPrimaryNicIp array = [for o in range(0, vmValues.vmCount): pNicModule[o].outputs.vNicIPaddress]
 
