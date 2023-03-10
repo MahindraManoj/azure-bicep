@@ -1,0 +1,65 @@
+{
+ "properties": {
+  "displayName": "Add Custom Tagging",
+  "policyType": "Custom",
+  "metadata": {
+   "version": "0.1.0",
+   "category": "Tags",
+   "createdBy": "69e42b55-9fa6-4588-9f05-0b52333f1ab0",
+   "createdOn": "2023-03-10T04:51:08.7528256Z",
+   "updatedBy": null,
+   "updatedOn": null
+  },
+  "parameters": {
+   "envTagValue": {
+    "type": "String",
+    "metadata": {
+     "displayName": "Environment Tag value",
+     "description": "Value of the tag 'Env'"
+    },
+    "allowedValues": [
+     "Dev",
+     "QA",
+     "CAT",
+     "PROD"
+    ]
+   },
+   "portfolioTagValue": {
+    "type": "String",
+    "metadata": {
+     "displayName": "Portfolio tag value",
+     "description": "Value of the tag 'Portfolio'"
+    }
+   }
+  },
+  "policyDefinitions": [
+   {
+    "policyDefinitionReferenceId": "13652360896199118147",
+    "policyDefinitionId": "/subscriptions/830248f2-52b1-4955-8d2b-f8e3f22a2bbb/providers/Microsoft.Authorization/policyDefinitions/AddTagsToResourceGroupsIfNotPresent",
+    "parameters": {
+     "envTagValue": {
+      "value": "[parameters('envTagValue')]"
+     },
+     "portfolioTagValue": {
+      "value": "[parameters('portfolioTagValue')]"
+     }
+    }
+   },
+   {
+    "policyDefinitionReferenceId": "7375998818436002266",
+    "policyDefinitionId": "/subscriptions/830248f2-52b1-4955-8d2b-f8e3f22a2bbb/providers/Microsoft.Authorization/policyDefinitions/AddTagsTosupportedResourceTypesIfNotPresent",
+    "parameters": {
+     "envTagValue": {
+      "value": "[parameters('envTagValue')]"
+     },
+     "portfolioTagValue": {
+      "value": "[parameters('portfolioTagValue')]"
+     }
+    }
+   }
+  ]
+ },
+ "id": "/subscriptions/830248f2-52b1-4955-8d2b-f8e3f22a2bbb/providers/Microsoft.Authorization/policySetDefinitions/AddCustomTagging",
+ "type": "Microsoft.Authorization/policySetDefinitions",
+ "name": "AddCustomTagging"
+}
