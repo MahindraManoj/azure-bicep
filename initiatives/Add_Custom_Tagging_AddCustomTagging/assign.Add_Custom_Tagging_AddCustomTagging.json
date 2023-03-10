@@ -1,0 +1,35 @@
+{
+ "sku": {
+  "name": "A0",
+  "tier": "Free"
+ },
+ "identity": {
+  "principalId": "da50bbb2-67c8-4a3b-a853-3ff5a472cc5b",
+  "tenantId": "f6d5b8fa-99ce-4d79-b064-fd17d82f3568",
+  "type": "SystemAssigned"
+ },
+ "properties": {
+  "displayName": "Add Custom Tagging",
+  "policyDefinitionId": "/subscriptions/830248f2-52b1-4955-8d2b-f8e3f22a2bbb/providers/Microsoft.Authorization/policySetDefinitions/AddCustomTagging",
+  "scope": "/subscriptions/830248f2-52b1-4955-8d2b-f8e3f22a2bbb",
+  "parameters": {
+   "envTagValue": {
+    "value": "Dev"
+   },
+   "portfolioTagValue": {
+    "value": "Cloudies"
+   }
+  },
+  "metadata": {
+   "createdBy": "69e42b55-9fa6-4588-9f05-0b52333f1ab0",
+   "createdOn": "2023-03-10T21:40:09.797193Z",
+   "updatedBy": null,
+   "updatedOn": null
+  },
+  "enforcementMode": "Default"
+ },
+ "id": "/subscriptions/830248f2-52b1-4955-8d2b-f8e3f22a2bbb/providers/Microsoft.Authorization/policyAssignments/AddCustomTagging",
+ "type": "Microsoft.Authorization/policyAssignments",
+ "name": "AddCustomTagging",
+ "location": "canadacentral"
+}
